@@ -1,0 +1,16 @@
+{
+  "name": "just-raiffeisen2snowball-converter",
+  "version": "1.0.0",
+  "description": "Converts Raiffeisen Ivest report to [Snowball Income](https://snowball-income.com) report format.",
+  "main": "src/index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "1.0.0-rc.12",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
+  }
+}
