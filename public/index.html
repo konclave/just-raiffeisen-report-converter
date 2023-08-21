@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Raiffeisen to Snowball income converter</title>
+    <style>
+        body {
+            font-family: 'Roboto Sans', Arial, Helvetica, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container.dragover {
+            background-color: #bedead;
+        }
+
+        .error-message {
+            display: none;
+            color: #fd5e53;
+        }
+
+        .error .helper-text {
+            display: none;
+        }
+
+        .error .error-message {
+            display: block;
+        }
+
+        .report-form {
+            display: flex;
+            flex-direction: column;
+            align-items: baseline;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .report-form label {}
+
+        .dropped-files {
+            list-style: none;
+        }
+
+        .dropped-files:empty {
+            display: none;
+        }
+
+        .select-file-button {
+            width: 100px;
+            height: 100px;
+            border: none;
+            border-radius: 5px;
+            background-color: lavender;
+            cursor: pointer;
+        }
+
+        .file-input {
+            visibility: hidden;
+        }
+
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            margin: 8px;
+            border: 8px solid steelblue;
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: steelblue transparent transparent transparent;
+        }
+
+        .lds-ring div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+
+        .lds-ring div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+
+        .lds-ring div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+
+        @keyframes lds-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Convert Raiffeisen to Snowball income</h1>
+        <form class="report-form">
+            <label>Загрузите отчёт Raiffeisen Broker (xlsx or html)</label>
+            <button class="select-file-button" type="button">FILE</button>
+            <input class="file-input" type="file" name="report" id="report"
+                accept="text/html, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+            <p class="helper-text">Или просто перетащите его сюда</p>
+        </form>
+    </div>
+
+    <template id="error">
+        <div class="error-message"></div>
+    </template>
+
+    <template id="dropped-files">
+        <ul class="dropped-files"></ul>
+    </template>
+
+    <template id="dropped-file">
+        <li></li>
+    </template>
+
+    <template id="spinner">
+        <div class="lds-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </template>
+
+    <script>
+        const fileInput = document.querySelector('#report');
+        const form = document.querySelector('.report-form');
+        const dropTarget = document.querySelector('.container');
+        const selectButton = document.querySelector('.select-file-button');
+
+        const allowedTypes = ['text/html', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+        const CONVERTER_URL = 'http://localhost:8080';
+
+        const errors = {
+            fileType: 'Тип файла должен быть xlsx или html',
+            fileLength: 'Можно перетащить только один файл',
+            server: 'Ошибка сервера',
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropTarget.classList.add('dragover');
+            hideError();
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            clearFileList();
+
+            const droppedFiles = e.dataTransfer.files;
+
+            if (droppedFiles.length > 1) {
+                showError('fileLength');
+                return;
+            }
+
+            for (let file of droppedFiles) {
+                if (!allowedTypes.includes(file.type)) {
+                    showError('fileType');
+                    return;
+                }
+            }
+        }
+
+        function handleFileChange(e) {
+            const file = e.target.files[0];
+            appendFileToList(file.name);
+            uploadFile();
+        }
+
+        async function uploadFile() {
+            showSpinner();
+            try {
+                await sendFile();
+                form.remove();
+            } catch (e) {
+                showError('server');
+            } finally {
+                hideSpinner();
+            }
+        }
+
+        async function sendFile() {
+            const formData = new FormData(form);
+            // formData.append('report', fileInput.files[0]);
+            const response = await fetch(CONVERTER_URL, {
+                method: 'POST',
+                body: formData
+            });
+        }
+
+        function appendFileToList(filename) {
+            clearFileList();
+            const list = document.querySelector('#dropped-files').content.cloneNode(true);
+            const li = document.createElement('li');
+            li.textContent = filename;
+            list.querySelector('ul').appendChild(li);
+            fileInput.after(list);
+        }
+
+        function showError(errorType) {
+            const template = document.querySelector('#error').content.cloneNode(true);
+            template.querySelector('.error-message').textContent = errors[errorType];
+            fileInput.after(template);
+            dropTarget.classList.add('error');
+        }
+
+        function hideError() {
+            const errorContainer = document.querySelector('.error-message');
+            if (errorContainer) {
+                errorContainer.remove()
+            }
+            dropTarget.classList.remove('error');
+        }
+
+        function clearFileList() {
+            document.querySelector('.dropped-files')?.remove();
+        }
+
+        function handleSelectClick() {
+            hideError();
+            fileInput.click();
+        }
+
+        function showSpinner() {
+            const template = document.querySelector('#spinner').content.cloneNode(true);
+            selectButton.after(template);
+            selectButton.remove();
+        }
+
+        function hideSpinner() {
+            document.querySelector('.lds-ring')?.remove();
+        }
+
+        dropTarget.addEventListener('dragover', handleDragOver);
+        dropTarget.addEventListener('dragenter', handleDragOver);
+        dropTarget.addEventListener('dragleave', handleDragLeave);
+        dropTarget.addEventListener('dragEnd', handleDragLeave);
+        dropTarget.addEventListener('drop', handleDragLeave);
+        dropTarget.addEventListener('drop', handleDrop);
+
+        fileInput.addEventListener('change', handleFileChange);
+
+        selectButton.addEventListener('click', handleSelectClick);
+
+
+    </script>
+</body>
+
+</html>
