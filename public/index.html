@@ -144,136 +144,136 @@
     </template>
 
     <script>
-        const fileInput = document.querySelector('#report');
-        const form = document.querySelector('.report-form');
-        const dropTarget = document.querySelector('.container');
-        const selectButton = document.querySelector('.select-file-button');
+        main();
 
-        const allowedTypes = ['text/html', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
-        const CONVERTER_URL = 'http://localhost:8080';
+        function main() {
+            const fileInput = document.querySelector('#report');
+            const form = document.querySelector('.report-form');
+            const dropTarget = document.querySelector('.container');
+            const selectButton = document.querySelector('.select-file-button');
 
-        const errors = {
-            fileType: 'Тип файла должен быть xlsx или html',
-            fileLength: 'Можно перетащить только один файл',
-            server: 'Ошибка сервера',
-        }
+            const allowedTypes = ['text/html', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
+            const CONVERTER_URL = '/convert';
 
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            dropTarget.classList.add('dragover');
-            hideError();
-        }
-
-        function handleDragLeave(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            dropTarget.classList.remove('dragover');
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            clearFileList();
-
-            const droppedFiles = e.dataTransfer.files;
-
-            if (droppedFiles.length > 1) {
-                showError('fileLength');
-                return;
+            const errors = {
+                fileType: 'Тип файла должен быть xlsx или html',
+                fileLength: 'Можно перетащить только один файл',
+                server: 'Ошибка сервера',
             }
 
-            for (let file of droppedFiles) {
-                if (!allowedTypes.includes(file.type)) {
-                    showError('fileType');
+            dropTarget.addEventListener('dragover', handleDragOver);
+            dropTarget.addEventListener('dragenter', handleDragOver);
+            dropTarget.addEventListener('dragleave', handleDragLeave);
+            dropTarget.addEventListener('dragEnd', handleDragLeave);
+            dropTarget.addEventListener('drop', handleDragLeave);
+            dropTarget.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileChange);
+            selectButton.addEventListener('click', handleSelectClick);
+
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropTarget.classList.add('dragover');
+                hideError();
+            }
+
+            function handleDragLeave(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropTarget.classList.remove('dragover');
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                clearFileList();
+
+                const droppedFiles = e.dataTransfer.files;
+
+                if (droppedFiles.length > 1) {
+                    showError('fileLength');
                     return;
                 }
+
+                for (let file of droppedFiles) {
+                    if (!allowedTypes.includes(file.type)) {
+                        showError('fileType');
+                        return;
+                    }
+                }
+            }
+
+            function handleFileChange(e) {
+                const file = e.target.files[0];
+                appendFileToList(file.name);
+                uploadFile();
+            }
+
+            async function uploadFile() {
+                showSpinner();
+                try {
+                    await sendFile();
+                    form.remove();
+                } catch (e) {
+                    showError('server');
+                } finally {
+                    hideSpinner();
+                }
+            }
+
+            async function sendFile() {
+                const formData = new FormData(form);
+                // formData.append('report', fileInput.files[0]);
+                const response = await fetch(CONVERTER_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+
+            function appendFileToList(filename) {
+                clearFileList();
+                const list = document.querySelector('#dropped-files').content.cloneNode(true);
+                const li = document.createElement('li');
+                li.textContent = filename;
+                list.querySelector('ul').appendChild(li);
+                fileInput.after(list);
+            }
+
+            function showError(errorType) {
+                const template = document.querySelector('#error').content.cloneNode(true);
+                template.querySelector('.error-message').textContent = errors[errorType];
+                fileInput.after(template);
+                dropTarget.classList.add('error');
+            }
+
+            function hideError() {
+                const errorContainer = document.querySelector('.error-message');
+                if (errorContainer) {
+                    errorContainer.remove()
+                }
+                dropTarget.classList.remove('error');
+            }
+
+            function clearFileList() {
+                document.querySelector('.dropped-files')?.remove();
+            }
+
+            function handleSelectClick() {
+                hideError();
+                fileInput.click();
+            }
+
+            function showSpinner() {
+                const template = document.querySelector('#spinner').content.cloneNode(true);
+                selectButton.after(template);
+                selectButton.remove();
+            }
+
+            function hideSpinner() {
+                document.querySelector('.lds-ring')?.remove();
             }
         }
-
-        function handleFileChange(e) {
-            const file = e.target.files[0];
-            appendFileToList(file.name);
-            uploadFile();
-        }
-
-        async function uploadFile() {
-            showSpinner();
-            try {
-                await sendFile();
-                form.remove();
-            } catch (e) {
-                showError('server');
-            } finally {
-                hideSpinner();
-            }
-        }
-
-        async function sendFile() {
-            const formData = new FormData(form);
-            // formData.append('report', fileInput.files[0]);
-            const response = await fetch(CONVERTER_URL, {
-                method: 'POST',
-                body: formData
-            });
-        }
-
-        function appendFileToList(filename) {
-            clearFileList();
-            const list = document.querySelector('#dropped-files').content.cloneNode(true);
-            const li = document.createElement('li');
-            li.textContent = filename;
-            list.querySelector('ul').appendChild(li);
-            fileInput.after(list);
-        }
-
-        function showError(errorType) {
-            const template = document.querySelector('#error').content.cloneNode(true);
-            template.querySelector('.error-message').textContent = errors[errorType];
-            fileInput.after(template);
-            dropTarget.classList.add('error');
-        }
-
-        function hideError() {
-            const errorContainer = document.querySelector('.error-message');
-            if (errorContainer) {
-                errorContainer.remove()
-            }
-            dropTarget.classList.remove('error');
-        }
-
-        function clearFileList() {
-            document.querySelector('.dropped-files')?.remove();
-        }
-
-        function handleSelectClick() {
-            hideError();
-            fileInput.click();
-        }
-
-        function showSpinner() {
-            const template = document.querySelector('#spinner').content.cloneNode(true);
-            selectButton.after(template);
-            selectButton.remove();
-        }
-
-        function hideSpinner() {
-            document.querySelector('.lds-ring')?.remove();
-        }
-
-        dropTarget.addEventListener('dragover', handleDragOver);
-        dropTarget.addEventListener('dragenter', handleDragOver);
-        dropTarget.addEventListener('dragleave', handleDragLeave);
-        dropTarget.addEventListener('dragEnd', handleDragLeave);
-        dropTarget.addEventListener('drop', handleDragLeave);
-        dropTarget.addEventListener('drop', handleDrop);
-
-        fileInput.addEventListener('change', handleFileChange);
-
-        selectButton.addEventListener('click', handleSelectClick);
-
-
     </script>
 </body>
 
