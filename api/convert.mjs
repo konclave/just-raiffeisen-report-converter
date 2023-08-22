@@ -1,8 +1,17 @@
-import * as xls from './xls.mjs';
-import * as xml from './xml.mjs';
+import * as xls from '../src/xls.mjs';
+import * as xml from '../src/xml.mjs';
 
 // handles post request with the file and returns the parsed data
-export default async function handleRequest(event, context) {
+export default async function handleRequest(req, res) {
+  if (!req.body) {
+    return res.send({
+      statusCode: 400,
+      body: {
+        message: 'No file provided'
+      }
+    });
+  }
+
   const file = req.body;
   const contentType = req.headers.contentType;
 
@@ -16,18 +25,18 @@ export default async function handleRequest(event, context) {
       report = xml.parseReport(file);
       break;
     default:
-      return {
-        statusCode: 500,
+      return res.send({
+        statusCode: 400,
         body: {
-          message: 'Report could not be parsed'
+          message: 'Report could not be parsed. Unsupported file type.'
         }
-      };
-  }
+      });
+  };
 
-  return {
+  return res.send({
     statusCode: 200,
     body: {
       report
     }
-  };
+  });
 }
