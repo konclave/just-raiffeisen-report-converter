@@ -4,7 +4,8 @@
   "description": "Converts Raiffeisen Ivest report to [Snowball Income](https://snowball-income.com) report format.",
   "main": "src/index.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "NODE_ENV=development node ./src/server.mjs"
   },
   "keywords": [],
   "author": "",
