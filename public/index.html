@@ -229,6 +229,10 @@
                     method: 'POST',
                     body: formData
                 });
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                window.open(url, '_blank');
+                URL.revokeObjectURL(url);
             }
 
             function appendFileToList(filename) {
