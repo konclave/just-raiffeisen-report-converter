@@ -1,16 +1,11 @@
+import * as multipart from 'parse-multipart-data';
+
 export function parseMultipart(body, contentType) {
-  const boundary = contentType.split("; ")[1].replace("boundary=", "");
-  const boundaryRegex = new RegExp(`-{0,2}${boundary}-{0,2}[\r\n]*`);
-  const bodyParts = body.split(boundaryRegex).filter(Boolean);
+  const boundary = contentType.split("; ")[1].replace("boundary=", "").replace('\n', '').replace('\r', '');
+  const bodyParts = multipart.parse(body, boundary);
 
   if (bodyParts.length > 1) {
     throw new Error("Too many data props received.");
   }
-  const [fileData] = bodyParts;
-  const [, filename] = fileData.match(/Content-Disposition: form-data; name=".+"; filename="(.+)"/)
-  const [, fileContentType] = fileData.match(/Content-Type: (.+)/)
-
-  const file = fileData.replace(/[\r\n]*Content-Disposition: form-data; name=".+"; filename="(.+)"[\r\n]Content-Type: (.+)[\r\n]{1,2}/, '');
-
-  return { contentType: fileContentType, filename, data: file };
+  return bodyParts[0];
 }

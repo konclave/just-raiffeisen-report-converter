@@ -8,6 +8,12 @@ dependencies:
   cheerio:
     specifier: 1.0.0-rc.12
     version: 1.0.0-rc.12
+  parse-multipart-data:
+    specifier: ^1.5.0
+    version: 1.5.0
+  windows-1251:
+    specifier: ^3.0.4
+    version: 3.0.4
   xlsx:
     specifier: https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz
     version: '@cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz'
@@ -104,6 +110,10 @@ packages:
       boolbase: 1.0.0
     dev: false
 
+  /parse-multipart-data@1.5.0:
+    resolution: {integrity: sha512-ck5zaMF0ydjGfejNMnlo5YU2oJ+pT+80Jb1y4ybanT27j+zbVP/jkYmCrUGsEln0Ox/hZmuvgy8Ra7AxbXP2Mw==}
+    dev: false
+
   /parse5-htmlparser2-tree-adapter@7.0.0:
     resolution: {integrity: sha512-B77tOZrqqfUfnVcOrUvfdLbz4pu4RopLD/4vmu3HUPswwTA8OH0EMW9BlWR2B0RCoiZRAHEUu7IxeP1Pd1UU+g==}
     dependencies:
@@ -115,6 +125,10 @@ packages:
     resolution: {integrity: sha512-Czj1WaSVpaoj0wbhMzLmWD69anp2WH7FXMB9n1Sy8/ZFF9jolSQVMu1Ij5WIyGmcBmhk7EOndpO4mIpihVqAXw==}
     dependencies:
       entities: 4.5.0
+    dev: false
+
+  /windows-1251@3.0.4:
+    resolution: {integrity: sha512-H6W68MVertlR74xVuwa2pdQ1jR5qksk+oZX6QXFhL5OYj/ZZxViob8UyGLfXPwsCijuaV7NUYOYkK0oXSaWW5g==}
     dev: false
 
   '@cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz':

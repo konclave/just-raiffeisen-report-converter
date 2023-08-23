@@ -1,6 +1,7 @@
 import * as xls from '../src/xls.mjs';
 import * as xml from '../src/xml.mjs';
 import { parseMultipart } from '../src/parse-multipart.mjs';
+import { convertToSnowball } from '../src/parser.mjs';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -14,33 +15,34 @@ export default async function handler(req, res) {
     body.push(chunk);
   });
 
-  req.on('end', () => {
-    body = Buffer.concat(body).toString();
+  req.on('end', async () => {
     let fileData = null;
     try {
-      fileData = parseMultipart(body, req.headers['content-type']);
+      fileData = parseMultipart(Buffer.concat(body), req.headers['content-type']);
     } catch (err) {
+      console.log(err);
       return res.status(400).json({
         message: err.message
       });
     }
 
     let report = null;
-    const { data, contentType } = fileData;
+    const { data, type: contentType } = fileData;
     switch (contentType) {
       case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
       case 'application/vnd.ms-excel':
-        report = xls.parseReport(data);
+        report = await xls.parseReport(data);
         break;
       case 'text/html':
-        report = xml.parseReport(data);
+        report = await xml.parseReport(data);
         break;
       default:
         return res.status(400).json({
           message: 'Report could not be parsed. Unsupported file type.'
         });
     };
-
-    return res.status(200).send(report);
+    const converted = convertToSnowball(report);
+    const csvFile = xls.saveReport(converted);
+    return res.status(200).send(csvFile);
   });
 }

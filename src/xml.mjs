@@ -1,10 +1,9 @@
 import * as cheerio from 'cheerio';
-import { readFile } from "node:fs/promises";
+import { decode } from 'windows-1251';
 import { mapRecordTypes } from './row-tests.mjs';
 
-export async function parseReport(filePath) {
-  const decoder = new TextDecoder('windows-1251');
-  const content = decoder.decode(await readFile(filePath));
+export async function parseReport(file) {
+  const content = decode(file);
   const $ = cheerio.load(content);
   const rows = [];
   $('tr').each((_, el) => {
