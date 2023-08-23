@@ -1,4 +1,5 @@
 export function parseMultipart(body, contentType) {
+  console.log(body, contentType);
   const boundary = contentType.split("; ")[1].replace("boundary=", "");
   const boundaryRegex = new RegExp(`-{0,2}${boundary}-{0,2}`);
   const bodyParts = body.split(boundaryRegex).filter(Boolean);

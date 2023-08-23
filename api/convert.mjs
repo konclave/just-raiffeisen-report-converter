@@ -9,18 +9,16 @@ export default async function handler(req, res) {
     });
   }
 
-  const requestContentType = req.headers.contentType;
-
   let body = [];
   req.on('data', chunk => {
     body.push(chunk);
   });
 
-  req.on('end', async () => {
+  req.on('end', () => {
     body = Buffer.concat(body).toString();
     let fileData = null;
     try {
-      fileData = parseMultipart(body, requestContentType);
+      fileData = parseMultipart(body, req.headers['content-type']);
     } catch (err) {
       return res.status(400).json({
         message: err.message
