@@ -2,8 +2,7 @@ import * as xls from '../src/xls.mjs';
 import * as xml from '../src/xml.mjs';
 import { parseMultipart } from '../src/parse-multipart.mjs';
 
-// handles post request with the file and returns the parsed data
-export default async function handleRequest(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(501).json({
       message: 'Not implemented.'
