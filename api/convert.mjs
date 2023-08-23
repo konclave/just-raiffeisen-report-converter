@@ -9,13 +9,13 @@ export default async function handleRequest(req, res) {
     });
   }
 
-  if (!req.body) {
+  if (!req.file) {
     return res.status(400).json({
       message: 'No file provided'
     });
   }
 
-  const file = req.body;
+  const file = req.file;
   const contentType = req.headers.contentType;
 
   let report = null;
