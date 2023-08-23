@@ -10,7 +10,7 @@ export default async function handleRequest(req, res) {
   }
 
   if (!req.body) {
-    res.status(400).json({
+    return res.status(400).json({
       message: 'No file provided'
     });
   }
