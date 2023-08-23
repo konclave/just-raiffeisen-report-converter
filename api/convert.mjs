@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const contentType = req.headers.contentType;
+  const requestContentType = req.headers.contentType;
 
   let body = [];
   req.on('data', chunk => {
@@ -18,10 +18,9 @@ export default async function handler(req, res) {
 
   req.on('end', async () => {
     body = Buffer.concat(body).toString();
-    let file = null;
+    let fileData = null;
     try {
-      const { contentType, data } = parseMultipart(body, contentType);
-      file = data;
+      fileData = parseMultipart(body, requestContentType);
     } catch (err) {
       return res.status(400).json({
         message: err.message
@@ -29,13 +28,14 @@ export default async function handler(req, res) {
     }
 
     let report = null;
+    const { data, contentType } = fileData;
     switch (contentType) {
       case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
       case 'application/vnd.ms-excel':
-        report = xls.parseReport(file);
+        report = xls.parseReport(data);
         break;
       case 'text/html':
-        report = xml.parseReport(file);
+        report = xml.parseReport(data);
         break;
       default:
         return res.status(400).json({
