@@ -7,6 +7,7 @@ const server = http.createServer();
 server.on('request', (request, response) => {
   if (request.method === 'GET') {
     const html = readFileSync('./public/index.html', 'utf8');
+    response.writeHead(200, { 'Content-Type': 'text/html' });
     response.end(html);
     return;
   }

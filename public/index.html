@@ -233,13 +233,25 @@
             }
 
             async function downloadFile(response) {
-                if (!response.headers['Content-Type'].includes('application/')) {
+                const filename = 'raiffeisen_snowball_report.xlsx';
+
+                const responseContentType = response.headers.get('content-type');
+                if (!responseContentType.includes('application/')) {
                     throw new Error('Wrong file type');
                 }
-                const file = new File(await response.blob(), 'raiffeisen_snowball_report.xlsx', {type: response.headers['Content-Type']});
+                const blob = await response.blob();
+
+                const file = new File([blob], filename);
                 const url = URL.createObjectURL(file);
-                window.open(url, '_blank');
-                URL.revokeObjectURL(url);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                });
             }
 
             function appendFileToList(filename) {
@@ -267,7 +279,10 @@
             }
 
             function clearFileList() {
-                document.querySelector('.dropped-files')?.remove();
+                const dropped = document.querySelector('.dropped-files');
+                if (dropped) {
+                    dropped.remove();
+                }
             }
 
             function handleSelectClick() {
@@ -282,13 +297,17 @@
             }
 
             function hideSpinner() {
-                document.querySelector('.lds-ring')?.remove();
+                const spinner = document.querySelector('.lds-ring');
+                if (spinner) {
+                    spinner.after(selectButton);
+                    spinner.remove();
+                }
             }
         }
 
         window.va = window.va || function () {(window.vaq = window.vaq || []).push(arguments);};
     </script>
-    <script defer src="/_vercel/insights/script.js"></script>
+    <!-- <script defer src="/_vercel/insights/script.js"></script> -->
 </body>
 
 </html>
