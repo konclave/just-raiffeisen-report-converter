@@ -49,7 +49,7 @@ export default async function handler(req, res) {
     };
 
     const converted = convertToSnowball(report);
-    const xlsReportFile = xls.saveReport(converted);
+    const xlsReportFile = await xls.saveReport(converted);
     res.statusCode = 200
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     res.end(xlsReportFile);
