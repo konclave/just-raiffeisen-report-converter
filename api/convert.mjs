@@ -3,12 +3,15 @@ import * as xml from '../src/xml.mjs';
 
 // handles post request with the file and returns the parsed data
 export default async function handleRequest(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(404).json({
+      message: 'Not found'
+    });
+  }
+
   if (!req.body) {
-    return res.send({
-      statusCode: 400,
-      body: {
-        message: 'No file provided'
-      }
+    res.status(400).json({
+      message: 'No file provided'
     });
   }
 
@@ -25,18 +28,10 @@ export default async function handleRequest(req, res) {
       report = xml.parseReport(file);
       break;
     default:
-      return res.send({
-        statusCode: 400,
-        body: {
-          message: 'Report could not be parsed. Unsupported file type.'
-        }
+      return res.status(400).json({
+        message: 'Report could not be parsed. Unsupported file type.'
       });
   };
 
-  return res.send({
-    statusCode: 200,
-    body: {
-      report
-    }
-  });
+  return res.status(200).send(report);
 }
