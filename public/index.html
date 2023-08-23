@@ -202,6 +202,8 @@
                         return;
                     }
                 }
+
+                uploadFile(downloadFile[0])
             }
 
             function handleFileChange(e) {
@@ -210,10 +212,10 @@
                 uploadFile();
             }
 
-            async function uploadFile() {
+            async function uploadFile(file) {
                 showSpinner();
                 try {
-                    await sendFile();
+                    await sendFile(file);
                 } catch (e) {
                     showError('server');
                 } finally {
@@ -221,9 +223,11 @@
                 }
             }
 
-            async function sendFile() {
+            async function sendFile(file) {
                 const formData = new FormData(form);
-                // formData.append('report', fileInput.files[0]);
+                if (file) {
+                    formData.append('report', file);
+                }
                 const response = await fetch(CONVERTER_URL, {
                     method: 'POST',
                     body: formData
