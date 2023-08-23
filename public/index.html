@@ -214,7 +214,6 @@
                 showSpinner();
                 try {
                     await sendFile();
-                    form.remove();
                 } catch (e) {
                     showError('server');
                 } finally {
@@ -229,8 +228,16 @@
                     method: 'POST',
                     body: formData
                 });
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
+
+                downloadFile(response);
+            }
+
+            async function downloadFile(response) {
+                if (!response.headers['Content-Type'].includes('application/')) {
+                    throw new Error('Wrong file type');
+                }
+                const file = new File(await response.blob(), 'raiffeisen_snowball_report.xlsx', {type: response.headers['Content-Type']});
+                const url = URL.createObjectURL(file);
                 window.open(url, '_blank');
                 URL.revokeObjectURL(url);
             }
