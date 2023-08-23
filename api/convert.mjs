@@ -5,8 +5,8 @@ import { parseMultipart } from '../src/parse-multipart.mjs';
 // handles post request with the file and returns the parsed data
 export default async function handleRequest(req, res) {
   if (req.method !== 'POST') {
-    return res.status(404).json({
-      message: 'Not found'
+    return res.status(501).json({
+      message: 'Not implemented.'
     });
   }
 
@@ -17,7 +17,7 @@ export default async function handleRequest(req, res) {
     body.push(chunk);
   });
 
-  request.on('end', async () => {
+  req.on('end', async () => {
     body = Buffer.concat(body).toString();
     let file = null;
     try {
