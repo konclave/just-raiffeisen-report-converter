@@ -247,13 +247,15 @@
                     body: formData
                 });
 
-                downloadFile(response);
+                const filenameSplitted = files[0].name.split('.')
+                const filenameNoExtension = filenameSplitted[filenameSplitted.length - 2];
+                downloadFile(response, filenameNoExtension);
                 filelistElements.forEach((item) => setDownloadSuccess(item));
                 form.reset();
             }
 
-            async function downloadFile(response) {
-                const filename = 'raiffeisen_snowball_report.xlsx';
+            async function downloadFile(response, sourceFilename) {
+                const filename = `snowball_income_${sourceFilename}.xlsx`;
 
                 const responseContentType = response.headers.get('content-type');
                 if (!responseContentType.includes('application/')) {
