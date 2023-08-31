@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Raiffeisen to Snowball income converter</title>
+    <title>Конвертер отчётов Raiffeisen Invest в формат Snowball Income</title>
     <style>
         body {
             font-family: 'Roboto Sans', Arial, Helvetica, sans-serif;
@@ -69,21 +69,27 @@
         .lds-ring {
             display: inline-block;
             position: relative;
-            width: 80px;
-            height: 80px;
+            width: 20px;
+            height: 20px;
         }
 
         .lds-ring div {
             box-sizing: border-box;
             display: block;
             position: absolute;
-            width: 64px;
-            height: 64px;
-            margin: 8px;
-            border: 8px solid steelblue;
+            width: 16px;
+            height: 16px;
+            margin: 2px;
+            border: 2px solid steelblue;
             border-radius: 50%;
             animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
             border-color: steelblue transparent transparent transparent;
+        }
+
+        .dropped-file {
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .lds-ring div:nth-child(1) {
@@ -112,9 +118,9 @@
 
 <body>
     <div class="container">
-        <h1>Convert Raiffeisen to Snowball income</h1>
+        <h1>Конвертировать отчёт Raiffeisen Invest в формат Snowball Income</h1>
         <form class="report-form">
-            <label>Загрузите отчёт Raiffeisen Broker (xlsx or html)</label>
+            <label>Загрузите отчёт Raiffeisen Broker (xlsx или html)</label>
             <button class="select-file-button" type="button">FILE</button>
             <input class="file-input" type="file" name="report" id="report"
                 accept="text/html, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
@@ -131,16 +137,24 @@
     </template>
 
     <template id="dropped-file">
-        <li></li>
+        <li class="dropped-file"></li>
     </template>
 
     <template id="spinner">
-        <div class="lds-ring">
+        <div class="lds-ring spinner">
             <div></div>
             <div></div>
             <div></div>
             <div></div>
         </div>
+    </template>
+
+    <template id="download-link">
+        <a href="#" download>⬇️</a>
+    </template>
+
+    <template id="download-success">
+        <span>✅</span>
     </template>
 
     <script>
@@ -151,6 +165,7 @@
             const form = document.querySelector('.report-form');
             const dropTarget = document.querySelector('.container');
             const selectButton = document.querySelector('.select-file-button');
+            let fileListElement = null;
 
             const allowedTypes = ['text/html', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'];
             const CONVERTER_URL = '/api/convert';
@@ -187,8 +202,6 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                clearFileList();
-
                 const droppedFiles = e.dataTransfer.files;
 
                 if (droppedFiles.length > 1) {
@@ -201,25 +214,21 @@
                         showError('fileType');
                         return;
                     }
+                    uploadFile(file);
                 }
-
-                uploadFile(downloadFile[0])
             }
 
             function handleFileChange(e) {
                 const file = e.target.files[0];
-                appendFileToList(file.name);
                 uploadFile();
             }
 
             async function uploadFile(file) {
-                showSpinner();
                 try {
                     await sendFile(file);
                 } catch (e) {
+                    console.error(e);
                     showError('server');
-                } finally {
-                    hideSpinner();
                 }
             }
 
@@ -228,12 +237,19 @@
                 if (file) {
                     formData.append('report', file);
                 }
+
+                const files = [...formData.values()].filter((file) => Boolean(file.name));
+
+                const filelistElements = files.map(({name}) => appendFileToList(name));
+
                 const response = await fetch(CONVERTER_URL, {
                     method: 'POST',
                     body: formData
                 });
 
                 downloadFile(response);
+                filelistElements.forEach((item) => setDownloadSuccess(item));
+                form.reset();
             }
 
             async function downloadFile(response) {
@@ -250,21 +266,28 @@
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = filename;
-                document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
                 setTimeout(() => {
                     URL.revokeObjectURL(url);
                 });
             }
 
             function appendFileToList(filename) {
-                clearFileList();
-                const list = document.querySelector('#dropped-files').content.cloneNode(true);
-                const li = document.createElement('li');
+                const isFileListExist = fileListElement !== null;
+
+                let container;
+                if (!isFileListExist) {
+                    container = document.querySelector('#dropped-files').content.cloneNode(true);
+                    fileListElement = container.querySelector('ul');
+                    fileInput.after(container);
+                }
+
+                const liTemplate = document.querySelector('#dropped-file').content.cloneNode(true);
+                const li = liTemplate.querySelector('li')
                 li.textContent = filename;
-                list.querySelector('ul').appendChild(li);
-                fileInput.after(list);
+                fileListElement.appendChild(liTemplate);
+                showSpinner(li);
+                return li;
             }
 
             function showError(errorType) {
@@ -282,22 +305,18 @@
                 dropTarget.classList.remove('error');
             }
 
-            function clearFileList() {
-                const dropped = document.querySelector('.dropped-files');
-                if (dropped) {
-                    dropped.remove();
-                }
-            }
-
             function handleSelectClick() {
                 hideError();
                 fileInput.click();
             }
 
-            function showSpinner() {
-                const template = document.querySelector('#spinner').content.cloneNode(true);
-                selectButton.after(template);
-                selectButton.remove();
+            function showSpinner(parent) {
+                const spinnerElement = document.querySelector('#spinner').content.cloneNode(true);
+                if (parent) {
+                    parent.appendChild(spinnerElement);
+                } else {
+                    selectButton.after(spinnerElement);
+                }
             }
 
             function hideSpinner() {
@@ -306,6 +325,13 @@
                     spinner.after(selectButton);
                     spinner.remove();
                 }
+            }
+
+            function setDownloadSuccess(parent) {
+                const spinner = parent.querySelector('.spinner');
+                const successIcon = document.querySelector('#download-success').content.cloneNode(true);
+                spinner.after(successIcon);
+                spinner.remove();
             }
         }
 
