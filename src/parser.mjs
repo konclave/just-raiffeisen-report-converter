@@ -85,6 +85,7 @@ function convertTransactionsToSnowball(deal) {
   let symbol = deal[TRANSACTIONS_CURRENCY_FIELD_NO];
   let feeTax = 0;
   let price = getPrice(deal[TRANSACTIONS_PRICE_FIELD_NO]);
+  let quantity = 1;
 
   if (event === 'Dividend') {
     const { isin, fee } = parseDividend(deal[TRANSACTIONS_EVENT_FIELD_NO]);
@@ -97,12 +98,17 @@ function convertTransactionsToSnowball(deal) {
     price = 0;
   }
 
+  if (event === 'Cash_In') {
+    price = 1;
+    quantity = getPrice(deal[TRANSACTIONS_PRICE_FIELD_NO]);
+  }
+
   return {
     Event: event,
     Date: getDate(deal[TRANSACTIONS_DATE_FIELD_NO]),
     Symbol: symbol,
     Price: price, // для дивидендов считается неверно – должно быть на 1 акцию, сейчас общая сумма
-    Quantity: Math.abs(deal[TRANSACTIONS_PRICE_FIELD_NO]),
+    Quantity: quantity,
     Currency: fixCurrency(deal[TRANSACTIONS_CURRENCY_FIELD_NO]),
     FeeTax: feeTax,
     Exchange: '',
